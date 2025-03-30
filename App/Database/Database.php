@@ -42,7 +42,7 @@ abstract class Database{
 
     abstract protected function getPDO() : PDO;
 
-    abstract public function select(array $columns = [], string $table, array $clauses = [], array $clauseLinkers = [], array $parameters = []) : array;
+    abstract public function select(string $table, array $columns = [], array $clauses = [], array $clauseLinkers = [], array $parameters = []) : array;
 
     abstract public function insert(string $table, array $columns = [], array $parameters = []) : bool;
 

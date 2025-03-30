@@ -4,6 +4,8 @@
 
 <?php
 
+use App\Auth\Auth;
+
 $db = \App\Database\SQLDatabase::getInstance();
 
 
@@ -12,11 +14,15 @@ $clause = array(
         "column" => "id",
         "condition" => ">="
     ),
-    array(
-        "column" => "id",
-        "condition" => "="
-    ),
 );
-// print_r($db->select(["name", "mail"],"players", $clause,["OR"],["1", "2"])); 
 
-$db->update("tester", ["name", "mail"], $clause, ["OR"], ["judy", "july", "hum", "hum"]);
+// print_r($db->select("tester", ["name", "mail"], $clause,[],["1"])); 
+
+// $db->update("tester", ["name", "mail"], $clause, ["OR"], ["judy", "july", "hum", "hum"]);
+
+
+$auth = Auth::getAuth($db);
+
+// $auth->signup("yoan","yoanhall@gmail.com", "12345");
+
+var_dump($auth->signin("yoanhall@gmail.com", "12345"));

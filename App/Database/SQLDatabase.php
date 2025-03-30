@@ -44,13 +44,13 @@ class SQLDatabase extends Database{
     }
 
     #[\Override]
-    public function select(array $columns = [], string $table, array $clauses = [], array $clauseLinkers = [], array $parameters = []) : array{
+    public function select(string $table, array $columns = [],  array $clauses = [], array $clauseLinkers = [], array $parameters = []) : array{
         if(count($clauses) != count($parameters)){
             throw new \InvalidArgumentException("The number of clauses must match the number of parameters.");
         }
 
         if(count($clauses) - 1 != count($clauseLinkers) ){
-            throw new \InvalidArgumentException("The number of linkers must does not match.");
+            throw new \InvalidArgumentException("The number of linkers does not match.");
         }
 
         $query = "SELECT ".(empty($columns) ? "* " : implode(", ", $columns));
@@ -72,7 +72,7 @@ class SQLDatabase extends Database{
                 }
             }
         } 
-
+       
         try {
             $result = null;
             if(empty($parameters)){
@@ -93,7 +93,8 @@ class SQLDatabase extends Database{
 
     #[\Override]
     public function insert(string $table, array $columns = [], array $parameters = []) : bool{
-        if (count($columns) !== count($parameters)) {
+
+        if (count($columns) != count($parameters)) {
             throw new \InvalidArgumentException("Column count does not match parameter count.");
         }
         $query = "INSERT INTO `{$table}`";
@@ -102,7 +103,6 @@ class SQLDatabase extends Database{
         }
 
         $query = $query."VALUES (".implode(", ", array_fill(0, count($parameters), "?")).")";
-        echo $query;
 
         $result = $this->getPDO()->prepare($query);
         $result->execute($parameters);

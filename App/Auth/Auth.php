@@ -3,19 +3,27 @@
 namespace App\Auth;
 
 use App;
+use App\Database\Database;
+
+
+class SIGNIN_CASE{
+    const SIGNED = 1;
+    const NOUSER = 2;
+    const WRONGPASSWORD = 3;
+
+};
 
 class Auth{ 
     //a basic auth class in case we need one in the project (singleton)
     //you can rewrite the class but do not delete $_instance, $db, $connect variables, they are useful for proper functioning of the class
 
     private static $_instance = null;
-    private $db;
-    private $connect = false;
 
+    private Database $db;
+    private $connected = false;
     private $name;
-    private $adresse;
 
-    public static function getAuth($db)
+    public static function getAuth(Database $db)
     {
         if(is_null(self::$_instance))
         {
@@ -23,53 +31,70 @@ class Auth{
         }
         return $_instance;
     }
-    public function __construct($db)
+    public function __construct(Database $db)
     {
         $this->db = $db;
     }
-    public function signup($_name, $_lname, $_mail, $_pass) //to rewrite on your own
+
+    public function signup($_name, $_mail, $_pass) : bool//to rewrite on your own
     {
         $temppass = password_hash($_pass,PASSWORD_DEFAULT);
-        $_mona_id = null;
         do{
-            $mona_id = $this->generate_id();
-            $reuslt = $this->db->selectionner("SELECT * FROM user WHERE mona_id=?",[$mona_id],false);
-        }while(count($reuslt) > 0 );
+            $id = $this->generate_id();
+            $clause = array(
+                array(
+                    "column" => "user_id",
+                    "condition" => "="
+                ),
+            );
+            $result = $this->db->select("tester",[], $clause, [],[$id]);
+        }while(count($result) > 0 );
 
-        if($this->db->inserer("INSERT INTO user(name,surname,address,mona_id,mail,password,district,role) VALUES(?,?,?,?,?,?,?,?)",[$_name, $_lname,$_address,$mona_id,$_mail,$temppass,$_district,$role]))
-        {
-            $_SESSION['user'] = $mona_id;
+        if($this->db->insert("tester", ["name", "mail", "user_id", "password"], [$_name, $_mail, $id, $temppass])){
+            $_SESSION['user'] = $id;
             $_SESSION['username'] = $_name;
-            $this->connect = true;
-            App::getInstance()->title = $_SESSION['username'];
+            $this->connected = true;
             return true;
-        }
-        else{
+        }else{
             return false;
         }
+
     }
-    public function signin($_mail,$_pass)
+
+    public function signin($_mail,$_pass) : int //to rewrite on your own
     {
-        $result = $this->db->selectionner("SELECT * FROM user WHERE mail=?",[$_mail],true);
-        if(is_object($result))
+        $clause = array(
+            array(
+                "column" => "mail",
+                "condition" => "="
+            ),
+        );
+        $result = $this->db->select("tester",[], $clause, [],[$_mail]);
+        if(count($result) == 1)
         {
-                if(password_verify($_pass,$result->password))
-                {
-                    $_SESSION['user'] = $result->mona_id;
-                    $_SESSION['username'] = $result->name;
-                    $this->connect = true;
-                    App::getInstance()->title = $_SESSION['username'];
-                    return 1;
-                }
-                else{
-                    return 3;
-                }
+            if(password_verify($_pass,$result[0]->password))
+            {
+                $_SESSION['user'] = $result[0]->user_id;
+                $_SESSION['username'] = $result[0]->name;
+                $this->connected = true;
+                return SIGNIN_CASE::SIGNED;
+            }
+            else{
+                return SIGNIN_CASE::WRONGPASSWORD;
+            }
         }
         else{
-            return 2;
+            return  SIGNIN_CASE::NOUSER;
         }
     }
-    public function generate_id()
+
+    public function logout(){
+        unset($_SESSION['user']);
+        unset($_SESSION['username']);
+        $this->connected = false;
+    }
+
+    public function generate_id() : string //to rewrite on your own
     {
             $aleatoire = 0;
             $dec='A'; 
@@ -129,3 +154,4 @@ class Auth{
         return isset($_SESSION['user']);
     }
 }
+
