@@ -26,3 +26,4 @@ $auth = Auth::getAuth($db);
 // $auth->signup("yoan","yoanhall@gmail.com", "12345");
 
 var_dump($auth->signin("yoanhall@gmail.com", "12345"));
+var_dump($_SESSION);

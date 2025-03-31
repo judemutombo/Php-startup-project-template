@@ -1,7 +1,5 @@
 <?php
 
-App::load();
-
 if(isset($_GET['url']))
 {
     $url = explode("/",$_GET['url']);

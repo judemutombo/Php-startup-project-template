@@ -22,8 +22,9 @@ class Auth{
     private Database $db;
     private $connected = false;
     private $name;
+    private $user;
 
-    public static function getAuth(Database $db)
+    public static function getAuth(Database $db) : Auth
     {
         if(is_null(self::$_instance))
         {
@@ -31,7 +32,7 @@ class Auth{
         }
         return $_instance;
     }
-    public function __construct(Database $db)
+    private function __construct(Database $db)
     {
         $this->db = $db;
     }
@@ -51,7 +52,7 @@ class Auth{
         }while(count($result) > 0 );
 
         if($this->db->insert("tester", ["name", "mail", "user_id", "password"], [$_name, $_mail, $id, $temppass])){
-            $_SESSION['user'] = $id;
+            $this->user = $id;
             $_SESSION['username'] = $_name;
             $this->connected = true;
             return true;
@@ -63,6 +64,7 @@ class Auth{
 
     public function signin($_mail,$_pass) : int //to rewrite on your own
     {
+        $this->logout();
         $clause = array(
             array(
                 "column" => "mail",
@@ -74,7 +76,7 @@ class Auth{
         {
             if(password_verify($_pass,$result[0]->password))
             {
-                $_SESSION['user'] = $result[0]->user_id;
+                $this->user = $result[0]->user_id;
                 $_SESSION['username'] = $result[0]->name;
                 $this->connected = true;
                 return SIGNIN_CASE::SIGNED;
@@ -88,9 +90,10 @@ class Auth{
         }
     }
 
-    public function logout(){
-        unset($_SESSION['user']);
-        unset($_SESSION['username']);
+    public function logout() : void{
+        $this->user = null;
+        if(isset($_SESSION['username'])) unset($_SESSION['username']);
+
         $this->connected = false;
     }
 
@@ -149,9 +152,12 @@ class Auth{
 
         return implode($de);
     }
-    public function isConnect()
+
+    public function isConnect() : bool
     {
-        return isset($_SESSION['user']);
+        return isset($_SESSION['username']) & $this->user != null;
     }
+
+
 }
 

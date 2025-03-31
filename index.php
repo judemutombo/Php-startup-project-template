@@ -1,11 +1,13 @@
 <?php
-require "vendor/autoload.php";
-require './App/App.php';
+define("ROOT",__DIR__);
+require ROOT.'/App/App.php';
+
+App::load();
 
 use App\Controller\ExampleController;
 
-define("ROOT",__DIR__);
-session_start();
+
+App::sessionstart();
 
 if(isset($_GET['url']))
 {

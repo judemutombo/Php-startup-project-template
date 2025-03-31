@@ -12,10 +12,10 @@ class SQLDatabase extends Database{
     {
         if(self::$instance == null)
         {
-            self::$config = require ROOT."/App/config/config.php";
-            self::$instance = new SQLDatabase();
+            static::$config = require ROOT."/App/config/config.php";
+            static::$instance = new SQLDatabase();
         }
-        return self::$instance;
+        return static::$instance;
     }
 
     private function __construct(){
