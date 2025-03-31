@@ -2,6 +2,7 @@
 
 namespace App\Database;
 
+use App\Singleton\singletonTrait;
 use PDO;
 use PDOStatement;
 
@@ -14,20 +15,13 @@ abstract class Database{
     protected $pdo = null;
 
     protected static $config;
-    protected static $instance = null;
 
-    public static function getInstance()
-    {
-        if(self::$instance == null)
-        {
-            self::$config = require ROOT."/App/config/config.php";
-            self::$instance = new Database();
-        }
-        return self::$instance;
-    }
+    use singletonTrait;
 
     protected function __construct()
     {
+        self::$config = require ROOT."/App/config/config.php";
+
         $this->host = self::$config["hostname"];
         $this->username = self::$config["username"];
         $this->dbname = self::$config["dbname"];
@@ -46,6 +40,7 @@ abstract class Database{
     abstract public function update(string $table, array $columns = [], array $clauses = [], array $clauseLinkers = [], array $parameters = []);
     
     final public function __clone(){}
+    final public function __sleep(){}
     final public function __wakeup(){}
 
 }

@@ -2,21 +2,13 @@
 
 namespace App\Database;
 
+use App\Singleton\singletonTrait;
 use Exception;
 use PDO;
 use PDOStatement;
 
 class SQLDatabase extends Database{
-
-    public static function getInstance()
-    {
-        if(self::$instance == null)
-        {
-            static::$config = require ROOT."/App/config/config.php";
-            static::$instance = new SQLDatabase();
-        }
-        return static::$instance;
-    }
+    use singletonTrait;
 
     private function __construct(){
         parent::__construct();
@@ -153,7 +145,7 @@ class SQLDatabase extends Database{
                 }
             }
         }
-
+        echo $query;
         try {
             $stmt = $this->getPDO()->prepare($query);
             $stmt->execute($parameters);

@@ -4,7 +4,7 @@ namespace App\Auth;
 
 use App;
 use App\Database\Database;
-
+use App\Singleton\singletonDbTrait;
 
 class SIGNIN_CASE{
     const SIGNED = 1;
@@ -13,9 +13,15 @@ class SIGNIN_CASE{
 
 };
 
+class SIGNUP_CASE{
+    const SIGNED = 1;
+    const EXITEDMAIL = 2;
+    const ERROR = 3;
+};
+
 class Auth{ 
     //a basic auth class in case we need one in the project (singleton)
-    //you can rewrite the class but do not delete $_instance, $db, $connect variables, they are useful for proper functioning of the class
+    //you can rewrite the class but do not delete  $db and $connect variables, they are useful for proper functioning of the class
 
     private static $_instance = null;
 
@@ -24,22 +30,29 @@ class Auth{
     private $name;
     private $user;
 
-    public static function getAuth(Database $db) : Auth
-    {
-        if(is_null(self::$_instance))
-        {
-            $_instance = new Auth($db);
-        }
-        return $_instance;
-    }
-    private function __construct(Database $db)
+    use singletonDbTrait;
+
+    private function __construct(Database $db) //to rewrite on your own
     {
         $this->db = $db;
     }
 
-    public function signup($_name, $_mail, $_pass) : bool//to rewrite on your own
+    public function signup($_name, $_mail, $_pass) : int //to rewrite on your own
     {
         $temppass = password_hash($_pass,PASSWORD_DEFAULT);
+
+        $clause = array(
+            array(
+                "column" => "mail",
+                "condition" => "="
+            ),
+        );
+        
+        $result = $this->db->select("tester",[], $clause, [],[$_mail]);
+        if(count($result) > 0){
+            return SIGNUP_CASE::EXITEDMAIL;
+        }
+
         do{
             $id = $this->generate_id();
             $clause = array(
@@ -47,17 +60,21 @@ class Auth{
                     "column" => "user_id",
                     "condition" => "="
                 ),
+                array(
+                    "column" => "mail",
+                    "condition" => "="
+                ),
             );
-            $result = $this->db->select("tester",[], $clause, [],[$id]);
+            $result = $this->db->select("tester",[], $clause, ["OR"],[$id, $_mail]);
         }while(count($result) > 0 );
 
         if($this->db->insert("tester", ["name", "mail", "user_id", "password"], [$_name, $_mail, $id, $temppass])){
             $this->user = $id;
             $_SESSION['username'] = $_name;
             $this->connected = true;
-            return true;
+            return SIGNUP_CASE::SIGNED;
         }else{
-            return false;
+            return SIGNUP_CASE::ERROR;
         }
 
     }
@@ -90,7 +107,8 @@ class Auth{
         }
     }
 
-    public function logout() : void{
+    public function logout() : void //to rewrite on your own
+    {
         $this->user = null;
         if(isset($_SESSION['username'])) unset($_SESSION['username']);
 
@@ -153,7 +171,7 @@ class Auth{
         return implode($de);
     }
 
-    public function isConnect() : bool
+    public function isConnect() : bool //to rewrite on your own
     {
         return isset($_SESSION['username']) & $this->user != null;
     }

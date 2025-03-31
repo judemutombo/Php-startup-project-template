@@ -4,7 +4,7 @@ namespace App\Controller;
 
 class MainController{
 
-    public function render($page, $template)
+    public function render($page, $template) : void
     {
         ob_start();
         require ROOT.'/App/views/pages/'.$page.'.php';
