@@ -16,9 +16,10 @@ if(isset($_GET['url']))
 
     $url = explode("/", $_GET['url']);
 }
-else{
-    header("Location:home");
-}
+
+
+
+var_dump($_GET);
 
 $controller = new ExampleController;
 
