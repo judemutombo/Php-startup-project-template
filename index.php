@@ -1,6 +1,6 @@
 <?php
 define("ROOT",__DIR__);
-require ROOT.'/App/App.php';
+require ROOT.DIRECTORY_SEPARATOR.'App'.DIRECTORY_SEPARATOR.'App.php';
 
 App::load();
 

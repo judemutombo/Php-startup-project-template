@@ -22,6 +22,14 @@ class App{
         require_once ROOT.'/vendor/autoload.php';
     }
 
+    public static function ActiveError() : void 
+    {
+        ini_set('display_errors', 1);
+        ini_set('display_startup_errors', 1);
+        error_reporting(E_ALL);
+
+    }
+    
     public function getTitle() : string
     {
         return $this->title;

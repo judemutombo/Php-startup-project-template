@@ -20,7 +20,7 @@ abstract class Database{
 
     protected function __construct()
     {
-        self::$config = require ROOT."/App/config/config.php";
+        self::$config = require ROOT.DIRECTORY_SEPARATOR."App".DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."config.php";
 
         $this->host = self::$config["hostname"];
         $this->username = self::$config["username"];
