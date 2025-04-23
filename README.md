@@ -1,73 +1,131 @@
-# PHP Startup Project Template
+# ⚡ Lightweight PHP Framework for API Services & Server-Side Rendering
 
-This repository contains a PHP startup project template designed to help you quickly set up a new PHP project. It includes a basic structure for organizing your code, configuration files, and some example components to get you started.
+This is a custom-built PHP framework designed to handle **RESTful API services** and **server-side rendered (SSR) pages** within a single project. It offers a clean, modular structure and provides performance-oriented tools like route compilation and middleware integration.
 
-## Table of Contents
+---
 
-- [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+## ✨ Features
 
-## Installation
+### 🔹 API Service System
+- ✅ Folder-based routing (e.g., `GET/users.php`, `POST/login.php`)
+- ✅ Support for route parameters using `RouteParameterValidator`
+- ✅ Global and endpoint-specific middleware support
+- ✅ Route compilation step for performance optimization
+- ✅ Clean error handling and JSON responses
 
-To install this project, follow these steps:
+### 🔹 Server-Side Rendering (SSR)
+- ✅ Dedicated rendering mechanism for HTML pages
+- ✅ Ideal for SEO-friendly and fast-loading dynamic content
+- ✅ Easy to integrate with any template engine or use pure PHP
+- ✅ Simple routing for static and dynamic views
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/judemutombo/Php-startup-project-template.git
-   ```
+---
 
-2. Navigate to the project directory:
-   ```bash
-   cd Php-startup-project-template
-   ```
+## 🧠 Architecture Overview
 
-3. Install the dependencies using Composer:
-   ```bash
-   composer install
-   ```
+- Fully written in **pure PHP**
+- Minimal dependencies, fast execution
+- Custom router handles both static routes and dynamic parameterized endpoints
+- Routes declared using `RouteParameterValidator::set('/:id/:name')`
+- Compiled route map improves speed and prevents runtime traversal of every endpoint file
 
-4. Configure your database settings in `App/Config/db.config.php`.
+---
 
-5. Configure your style settings in `App/Config/style.config.php`.
+## 📁 Folder Structure
 
-## Usage
+```
+myapp/
+├── api/
+│   ├── GET/
+│   │   ├── users.php
+│   │   └── users.id.php
+│   ├── POST/
+│   │   └── login.php
+│   └── MiddleWare/
+│       └── Verificator.php
+├── views/
+│   └── home.php
+├── system/
+│   └── Router.php
+│   └── RouteParameterValidator.php
+├── setup.php
+└── compile_routes.php
+```
 
-To start using the project, follow these steps:
+---
 
-1. Start your local development server:
-   ```bash
-   php -S localhost:8000
-   ```
+## 🛠 Usage
 
-2. Open your web browser and navigate to `http://localhost:8000`.
+### 🗂 Registering Routes with Parameters
+In your API endpoint file (e.g., `GET/users.php`), define expected parameters like this:
 
-3. You can now start building your PHP application using the provided structure and components.
+```php
+use API\Router\RouteParameterValidator;
 
-## Contributing
+RouteParameterValidator::set('/:id/:name');
+```
 
-If you would like to contribute to this project, please follow these guidelines:
+This allows matching requests like:
+```
+GET /api/users/4/Jude
+```
 
-1. Fork the repository.
+### ⚡ Route Compilation (Performance Boost)
+After creating or modifying endpoints, run the route compiler:
 
-2. Create a new branch for your feature or bugfix:
-   ```bash
-   git checkout -b my-feature-branch
-   ```
+```bash
+php compile_routes.php
+```
 
-3. Make your changes and commit them:
-   ```bash
-   git commit -m "Add new feature"
-   ```
+This will:
+- Scan all `GET/`, `POST/`, etc. endpoint files
+- Extract expected parameters via `RouteParameterValidator`
+- Build a precompiled router collection to speed up future requests
 
-4. Push your changes to your forked repository:
-   ```bash
-   git push origin my-feature-branch
-   ```
+---
 
-5. Create a pull request with a description of your changes.
+## 🧩 Middleware Support
 
-## License
+Register middleware globally or per endpoint in your `setup.php`:
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+```php
+use API\Router\Router;
+
+Router::setGlobalMiddleWare("Verificator");
+Router::setEndPointMiddleWare("users", "AuthCheck");
+
+Router::serve();
+```
+
+Middleware classes must implement a static `serve()` method.
+
+---
+
+## 🚀 Contribution Guide
+
+Want to contribute?
+
+1. Fork this repository
+2. Add new routes in `GET/`, `POST/`, etc.
+3. Use `RouteParameterValidator::set()` if parameters are expected
+4. Run the compiler (`php compile_routes.php`)
+5. Create a pull request with a description of your changes
+
+---
+
+## 📄 License
+
+This project is open-source and available under the MIT License.
+
+---
+
+## 💼 Add to Your CV
+
+**Custom PHP Framework for API & SSR**
+> Built a full-featured PHP framework supporting REST APIs and SSR views in the same application. Developed a dynamic route system with parameter validation, middleware support, and route compilation for high-performance execution. Inspired by Laravel and Express.js, the framework is lightweight, modular, and easy to extend.
+
+---
+
+## 🔗 Author
+
+Created by [Your Name] — Contributions, questions, and feedback are welcome!
