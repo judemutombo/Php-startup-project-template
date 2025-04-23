@@ -1,131 +1,103 @@
-# ⚡ Lightweight PHP Framework for API Services & Server-Side Rendering
 
-This is a custom-built PHP framework designed to handle **RESTful API services** and **server-side rendered (SSR) pages** within a single project. It offers a clean, modular structure and provides performance-oriented tools like route compilation and middleware integration.
+# 🌐 Fullstack PHP Framework – API & SSR System
 
----
+This project is a custom PHP framework designed to serve **both API endpoints** and **server-rendered pages** from the same architecture. It's built with modularity and performance in mind, featuring a compiler-based routing system for APIs and a traditional MVC-style rendering system for web pages.
 
-## ✨ Features
+## 🚀 Key Features
 
-### 🔹 API Service System
-- ✅ Folder-based routing (e.g., `GET/users.php`, `POST/login.php`)
-- ✅ Support for route parameters using `RouteParameterValidator`
-- ✅ Global and endpoint-specific middleware support
-- ✅ Route compilation step for performance optimization
-- ✅ Clean error handling and JSON responses
+- 📦 **Dual-purpose Project**: Handles RESTful APIs and server-side rendered (SSR) views within the same project.
+- 🧠 **Route Compilation System**: Inspired by compilers, this system pre-registers all route patterns and expected parameters for efficient runtime routing.
+- ⚙️ **Custom Routing Engine**:
+  - Supports RESTful method folders: `GET`, `POST`, `PUT`, etc.
+  - Uses `RouteParameterValidator::set()` for defining dynamic route patterns.
+  - Compiles routes into `compiled_routes.php` for high-performance matching.
+- 🧪 **Parameter Validation**:
+  - URL validation using `RouteParameterValidator` and `RequestParameter`.
+  - Automatic parameter matching against defined route requirements.
+- 🛠️ **Middleware Support**: Global or route-specific middleware for validation or security.
+- 📄 **Simple SSR**: Pages and templates can be rendered directly using the `Views` folder and controllers.
 
-### 🔹 Server-Side Rendering (SSR)
-- ✅ Dedicated rendering mechanism for HTML pages
-- ✅ Ideal for SEO-friendly and fast-loading dynamic content
-- ✅ Easy to integrate with any template engine or use pure PHP
-- ✅ Simple routing for static and dynamic views
-
----
-
-## 🧠 Architecture Overview
-
-- Fully written in **pure PHP**
-- Minimal dependencies, fast execution
-- Custom router handles both static routes and dynamic parameterized endpoints
-- Routes declared using `RouteParameterValidator::set('/:id/:name')`
-- Compiled route map improves speed and prevents runtime traversal of every endpoint file
-
----
-
-## 📁 Folder Structure
+## 📁 Folder Structure (Simplified)
 
 ```
-myapp/
-├── api/
-│   ├── GET/
-│   │   ├── users.php
-│   │   └── users.id.php
-│   ├── POST/
-│   │   └── login.php
-│   └── MiddleWare/
-│       └── Verificator.php
-├── views/
-│   └── home.php
-├── system/
-│   └── Router.php
-│   └── RouteParameterValidator.php
-├── setup.php
-└── compile_routes.php
+App/
+├── API/                      # Core API routing logic and compiled configurations
+│   ├── Configuration/        # Router, Bootstrap, and Parameter Validators
+│   ├── Methods/              # GET, POST, PUT HTTP method folders
+│   ├── MiddleWare/           # Middleware system
+├── Controller/               # Handles logic for SSR views
+├── Views/                    # Server-rendered templates and pages
+├── Sublime/                  # Route compilation tools
+Public/                       # Public-facing assets (CSS, JS, images)
+index.php                     # Main entry point
+README.md
 ```
 
----
+## 🔄 How the Routing System Works
 
-## 🛠 Usage
+1. **Defining an Endpoint**:
+   Create a file like `GET/users.php`.
+   Inside the file, use:
+   ```php
+   RouteParameterValidator::set("/:id/:name");
+   ```
+   This marks the file as expecting two parameters.
 
-### 🗂 Registering Routes with Parameters
-In your API endpoint file (e.g., `GET/users.php`), define expected parameters like this:
+2. **Compiling the Routes**:
+   Run the route compiler via `RouteRegistry` or `Compiler.php`. It:
+   - Scans the API folders.
+   - Extracts the route patterns from `RouteParameterValidator::set`.
+   - Saves them into `compiled_routes.php`.
+
+3. **Runtime Matching**:
+   When a request like `GET /api/users/3/john` comes in:
+   - The router first looks for a specific file like `/GET/users/3/john.php`.
+   - If not found, it checks `compiled_routes.php` for a matching pattern like `users/:id/:name`.
+   - If matched, the request is routed to `users.php` and parameters are passed accordingly.
+
+4. **Fallback**:
+   - If no match is found at any level, the system returns a `404 Not Found`.
+
+## 🧠 Server-Side Rendering (SSR)
+
+- Pages are served via files in `Views/Pages/`.
+- Layout templates are placed in `Views/Templates/`.
+- `Controller/` handles the business logic for these pages.
+
+## 🧪 Example Endpoint
 
 ```php
-use API\Router\RouteParameterValidator;
-
-RouteParameterValidator::set('/:id/:name');
+// GET/hello.php
+RouteParameterValidator::set("/:name");
+echo "Hello, " . $_GET['name'];
 ```
 
-This allows matching requests like:
-```
-GET /api/users/4/Jude
-```
+## 💻 Local Development
 
-### ⚡ Route Compilation (Performance Boost)
-After creating or modifying endpoints, run the route compiler:
+1. Clone the repository.
+2. Install dependencies:
+   ```bash
+   composer install
+   ```
+3. Start a PHP server:
+   ```bash
+   php -S localhost:8000 -t .
+   ```
+4. Access API via `http://localhost:8000/api/` or SSR pages via `http://localhost:8000/`.
 
-```bash
-php compile_routes.php
-```
+## 🧩 Contribution
 
-This will:
-- Scan all `GET/`, `POST/`, etc. endpoint files
-- Extract expected parameters via `RouteParameterValidator`
-- Build a precompiled router collection to speed up future requests
-
----
-
-## 🧩 Middleware Support
-
-Register middleware globally or per endpoint in your `setup.php`:
-
-```php
-use API\Router\Router;
-
-Router::setGlobalMiddleWare("Verificator");
-Router::setEndPointMiddleWare("users", "AuthCheck");
-
-Router::serve();
-```
-
-Middleware classes must implement a static `serve()` method.
-
----
-
-## 🚀 Contribution Guide
-
-Want to contribute?
-
-1. Fork this repository
-2. Add new routes in `GET/`, `POST/`, etc.
-3. Use `RouteParameterValidator::set()` if parameters are expected
-4. Run the compiler (`php compile_routes.php`)
-5. Create a pull request with a description of your changes
-
----
+You're welcome to contribute by:
+- Adding new modules to the API routing system
+- Improving SSR structure
+- Enhancing middleware or autoloading systems
+- Implementing the SSR routing System
+Please submit pull requests or open issues if you encounter bugs or have suggestions.
 
 ## 📄 License
 
-This project is open-source and available under the MIT License.
+MIT License
 
 ---
 
-## 💼 Add to Your CV
-
-**Custom PHP Framework for API & SSR**
-> Built a full-featured PHP framework supporting REST APIs and SSR views in the same application. Developed a dynamic route system with parameter validation, middleware support, and route compilation for high-performance execution. Inspired by Laravel and Express.js, the framework is lightweight, modular, and easy to extend.
-
----
-
-## 🔗 Author
-
-Created by [Your Name] — Contributions, questions, and feedback are welcome!
+This framework is lightweight, fast, and ideal for small to medium PHP projects that require both API and SSR capabilities in one codebase.
