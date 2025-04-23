@@ -10,6 +10,7 @@ class ComposerStaticInit348de582e803c6aa3dff4d1c399155e8
         'A' => 
         array (
             'App\\' => 4,
+            'API\\' => 4,
         ),
     );
 
@@ -18,10 +19,10 @@ class ComposerStaticInit348de582e803c6aa3dff4d1c399155e8
         array (
             0 => __DIR__ . '/../..' . '/App',
         ),
-    );
-
-    public static $classMap = array (
-        'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'API\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/App/API',
+        ),
     );
 
     public static function getInitializer(ClassLoader $loader)
@@ -29,7 +30,6 @@ class ComposerStaticInit348de582e803c6aa3dff4d1c399155e8
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit348de582e803c6aa3dff4d1c399155e8::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit348de582e803c6aa3dff4d1c399155e8::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit348de582e803c6aa3dff4d1c399155e8::$classMap;
 
         }, null, ClassLoader::class);
     }
