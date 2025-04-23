@@ -1,5 +1,5 @@
 <?php
-use API\Router\Router;
+use API\Configuration\Router\Router;
 
 Router::setEndPointMiddleWare("hello", "Verificator");
 
