@@ -1,86 +1,127 @@
 <?php
 namespace API\Configuration\Router;
-class Router{
 
-    private static $init = false;
-    private static $middlewares = array();
-    private static $globalMiddlewares = array();
-    private static $uri = REQUEST_URI;
-    private static $method = REQUEST_METHOD;
-    private static $segments = REQUEST_URI_SEGMENTS;
-    private static $api_index = API_INDEX;
-    
-    public static function setEndPointMiddleWare(string $endpoint, string $middleware) : void
-    {
-        $middleware_path = API_PATH.DIRECTORY_SEPARATOR.'MiddleWare'.DIRECTORY_SEPARATOR.$middleware.'.php';
-       
-        if(file_exists($middleware_path)){
-            if(array_key_exists($endpoint, self::$middlewares)){
-                array_push(self::$middlewares[$endpoint], $middleware);
-            }else{
-                self::$middlewares[$endpoint] = array($middleware); 
+class Router {
+    private static array $middlewares = [];
+    private static array $globalMiddlewares = [];
+    private static string $uri = REQUEST_URI;
+    private static string $method = REQUEST_METHOD;
+    private static array $segments = REQUEST_URI_SEGMENTS;
+    private static ?int $api_index = API_INDEX;
+    private static array $compiledRoutes = [];
+   private static array $requestSegments = [];
+    public static function serve(): void {
+        self::initialize();
+        try {
+            $route = self::findMatchingRoute();
+            if ($route) {
+                self::executeRoute($route);
+            } else {
+                self::respondNotFound();
             }
-        }else{
-            throw new \Exception("Error : the given middleware($middleware) does not exist.", 1);
+        } catch (\Exception $e) {
+            self::respondError($e->getMessage(), 500);
         }
-
     }
 
-    public static function setGlobalMiddleWare(string $middleware) : void
-    {
-        $middleware_path = API_PATH.DIRECTORY_SEPARATOR.'MiddleWare'.DIRECTORY_SEPARATOR.$middleware.'.php';
-       
-        if(file_exists($middleware_path)){
-            array_push(self::$globalMiddlewares, $middleware);
-        }else{
-            throw new \Exception("Error : the given middleware($middleware) does not exist.", 1);
-        }
-    } 
+    private static function initialize(): void {
+        self::$compiledRoutes = require __DIR__.'/compiled_routes.php';
+        self::$requestSegments = explode('/', trim(self::$uri, '/'));
+    }
 
-    public static function serve() : void
-    {
-        if (self::$api_index !== false) {
-            $resource_path = array_slice(self::$segments, self::$api_index + 1);
-            $endpoint = implode('/', $resource_path);
+    private static function findMatchingRoute(): ?array {
+        $path = implode('/', array_slice(self::$segments, self::$api_index + 1));
+        $segments = explode('/', $path);
 
-            $file_path = API_PATH .DIRECTORY_SEPARATOR.self::$method.DIRECTORY_SEPARATOR.$endpoint.".php";
-            if (file_exists($file_path)) {
-                $gmiddlewares = self::$globalMiddlewares;
-                foreach ($gmiddlewares as $middleware) {
-                    $class = "API\MiddleWare\\$middleware";
+        // Check from most specific to least specific path
+        for ($depth = count($segments); $depth > 0; $depth--) {
+            $currentPath = implode('/', array_slice($segments, 0, $depth));
+            $remainingSegments = array_slice($segments, $depth);
+
+            if (isset(self::$compiledRoutes[self::$method][$currentPath])) {
+                $route = self::$compiledRoutes[self::$method][$currentPath];
                 
-                    if (class_exists($class) && method_exists($class, 'serve')) {
-                        $class::serve();
-                    } else {
-                        throw new \Exception("Middleware class or method not found: $class::serve()");
-                    }
+                // Verify parameter requirements are met
+                if (count($remainingSegments) === count($route['params'])) {
+                    return $route;
                 }
-                $emiddlewares = self::$middlewares[$endpoint] ?? [];;
-                foreach ($emiddlewares as $middleware) {
-                    $class = "API\MiddleWare\\$middleware";
-                
-                    if (class_exists($class) && method_exists($class, 'serve')) {
-                        $class::serve();
-                    } else {
-                        throw new \Exception("Middleware class or method not found: $class::serve()");
-                    }
-                }
-                require $file_path;
-            } else {
-                http_response_code(404);
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Endpoint not found'
-                ]);
             }
-        } else {
-            http_response_code(400);
-            header('Content-Type: application/json');
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Invalid API structure'
-            ]);
-        }        
+        }
+
+        return null;
+    }
+
+    private static function executeRoute(array $route): void {
+        // Extract parameters
+        $path = implode('/', array_slice(self::$segments, self::$api_index + 1));
+        $routePath = array_search($route, self::$compiledRoutes[self::$method]);
+        $params = self::extractParams($routePath, $path, $route['params']);
+
+        // Run middleware chain
+        self::executeMiddlewareChain($route['file'], $params);
+
+        // Execute endpoint with parameters
+        extract(['_PARAMS' => $params]);
+        require $route['file'];
+    }
+
+    private static function extractParams(string $routePath, string $requestPath, array $paramDefinitions): array {
+        $routeSegments = explode('/', $routePath);
+        $requestSegments = explode('/', $requestPath);
+        $params = [];
+
+        foreach ($paramDefinitions as $index => $paramDef) {
+            $paramName = ltrim($paramDef, ':');
+            $paramValue = $requestSegments[count($routeSegments) + $index] ?? null;
+            $params[$paramName] = $paramValue;
+        }
+
+        return $params;
+    }
+
+    private static function executeMiddlewareChain(string $routeFile, array $params): void {
+        // Run global middleware
+        foreach (self::$globalMiddlewares as $middleware) {
+            $middleware::serve();
+        }
+
+        // Run route-specific middleware
+        $routeKey = str_replace(API_PATH.'/Methods/', '', $routeFile);
+        foreach (self::$middlewares[$routeKey] ?? [] as $middleware) {
+            $middleware::serve();
+        }
+    }
+
+    // Middleware registration methods (unchanged)
+    public static function setEndPointMiddleWare(string $endpoint, string $middleware): void {
+        $middlewareClass = self::validateMiddleware($middleware);
+        self::$middlewares[$endpoint][] = $middlewareClass;
+    }
+
+    public static function setGlobalMiddleWare(string $middleware): void {
+        $middlewareClass = self::validateMiddleware($middleware);
+        self::$globalMiddlewares[] = $middlewareClass;
+    }
+
+    private static function validateMiddleware(string $middleware): string {
+        $file = API_PATH.'/MiddleWare/'.$middleware.'.php';
+        if (!file_exists($file)) {
+            throw new \InvalidArgumentException("Middleware file not found: $middleware");
+        }
+        return "API\\MiddleWare\\$middleware";
+    }
+
+    private static function respondNotFound(): void {
+        http_response_code(404);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Endpoint not found']);
+        exit;
+    }
+
+    private static function respondError(string $message, int $code): void {
+        http_response_code($code);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => $message]);
+        exit;
     }
 }
