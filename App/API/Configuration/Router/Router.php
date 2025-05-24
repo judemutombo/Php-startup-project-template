@@ -1,5 +1,6 @@
 <?php
 namespace API\Configuration\Router;
+use API\Configuration\Transaction\Request;
 
 class Router {
     private static array $middlewares = [];
@@ -9,7 +10,8 @@ class Router {
     private static array $segments = REQUEST_URI_SEGMENTS;
     private static ?int $api_index = API_INDEX;
     private static array $compiledRoutes = [];
-   private static array $requestSegments = [];
+    private static array $requestSegments = [];
+
     public static function serve(): void {
         self::initialize();
         try {
@@ -59,9 +61,15 @@ class Router {
 
         // Run middleware chain
         self::executeMiddlewareChain($route['file'], $params);
+   
 
-        // Execute endpoint with parameters
-        extract(['_PARAMS' => $params]);
+        // Create Request variable 
+        $rawBody = file_get_contents("php://input");
+        $data = json_decode($rawBody, true);
+        $headers = getallheaders();
+
+        //$request = new Request(self::$method, $data, $params, self::$uri, $headers); 
+        define('Request', new Request(self::$method, $data, $params, self::$uri, $headers));
         require $route['file'];
     }
 
@@ -92,7 +100,6 @@ class Router {
         }
     }
 
-    // Middleware registration methods (unchanged)
     public static function setEndPointMiddleWare(string $endpoint, string $middleware): void {
         $middlewareClass = self::validateMiddleware($middleware);
         self::$middlewares[$endpoint][] = $middlewareClass;

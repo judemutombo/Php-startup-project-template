@@ -8,7 +8,7 @@ use App\Singleton\SingletonTrait;
 
 class App{
     private $db_instance = null;
-    private static $title = "The Best Group";
+    private static $title = "";
 
     use SingletonTrait;
 

@@ -13,21 +13,21 @@ $start = microtime(true);
 $stats = \App\Sublime\Compiler::compile();
 $time = round(microtime(true) - $start, 3);
 
-// Visual output
-echo "\n\033[1;37mCompilation Results:\033[0m\n";
-echo "┌────────────────────────┬───────────────┐\n";
-echo "│ \033[1;33mMethod\033[0m             │ \033[1;33mRoutes Found\033[0m │\n";
-echo "├────────────────────────┼───────────────┤\n";
+echo "\n\033[1;37m Compilation Results: \033[0m\n";
+echo "┌────────────────────────┬────────────────┐\n";
+printf("│ \033[1;33m %-20s \033[0m │ \033[1;33m %-s \033[0m │\n", "Methods", "Routes Found");
+echo "├────────────────────────┼────────────────┤\n";
 foreach ($stats['methods'] as $method => $count) {
-    printf("│ %-22s │ \033[32m%13d\033[0m │\n", $method, $count);
+    printf("│ %-22s │ \033[32m %12d \033[0m │\n", $method, $count);
 }
-echo "├────────────────────────┼───────────────┤\n";
-printf("│ \033[1;33mTotal Routes\033[0m       │ \033[1;32m%13d\033[0m │\n", $stats['total']);
-echo "├────────────────────────┼───────────────┤\n";
-printf("│ \033[1;33mParameterized Routes\033[0m│ \033[33m%13d\033[0m │\n", $stats['parameterized']);
-echo "├────────────────────────┼───────────────┤\n";
-printf("│ \033[1;33mCompilation Time\033[0m   │ \033[36m%10.3f sec\033[0m │\n", $time);
-echo "└────────────────────────┴───────────────┘\n";
+echo "├────────────────────────┼────────────────┤\n";
+printf("│ \033[1;33m %-20s \033[0m │ \033[1;32m %12d \033[0m │\n", "Total Routes", $stats['total']);
+echo "├────────────────────────┼────────────────┤\n";
+printf("│ \033[1;33m %-20s \033[0m │ \033[33m %12d \033[0m │\n", "Parameterized Routes", $stats['parameterized']);
+echo "├────────────────────────┼────────────────┤\n";
+printf("│ \033[1;33m %-20s \033[0m │ \033[36m %-8s sec \033[0m │\n", "Compilation Time", strval($time));
+echo "└────────────────────────┴────────────────┘\n";
 
-echo "\n\033[1;32m✓ Successfully compiled to compiled_routes.php\033[0m\n";
+$path = __DIR__.DIRECTORY_SEPARATOR."App".DIRECTORY_SEPARATOR."API".DIRECTORY_SEPARATOR."Configuration".DIRECTORY_SEPARATOR."Router".DIRECTORY_SEPARATOR."compiled_routes.php";
+echo "\n\033[1;32m ✓ Successfully compiled to ".$path." \033[0m\n";
 echo "\033[3;90m" . date('Y-m-d H:i:s') . "\033[0m\n";

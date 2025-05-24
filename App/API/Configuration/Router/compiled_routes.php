@@ -15,6 +15,9 @@ return array (
       'params' => 
       array (
         0 => ':id',
+        1 => ':content',
+        2 => '&start',
+        3 => '&finish',
       ),
     ),
     'users/identity' => 

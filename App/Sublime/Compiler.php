@@ -4,6 +4,7 @@ namespace App\Sublime;
 require ROOT_COMPILER.DIRECTORY_SEPARATOR.'/vendor/autoload.php';
 
 class Compiler {
+
     private static array $stats = [
         'total' => 0,
         'parameterized' => 0,
@@ -50,7 +51,7 @@ class Compiler {
             }
 
             $routeKey = self::getRouteKey($file, $method);
-            $params = self::extractParameters($file);
+            $params = self::extractParams($file);
             
             if (!empty($params)) {
                 self::$stats['parameterized']++;
@@ -79,12 +80,50 @@ class Compiler {
         );
     }
     
-    private static function extractParameters(\SplFileInfo $file): array {
+    private static function extractParams(\SplFileInfo $file): array {
         $content = @file_get_contents($file->getPathname());
         if ($content === false || !preg_match('/RouteParameterValidator::set\(["\'](.+?)["\']\)/', $content, $matches)) {
             return [];
         }
-        
-        return array_map('trim', explode('/', $matches[1]));
+        return self::extractUrlParams( $matches[1]);
     }
+
+    private static function extractUrlParams(string $match): array {
+        $params = [];
+        $queryAlreadySet = false;
+    
+        $parts = preg_split("/([\/\?&])/", $match, -1, PREG_SPLIT_DELIM_CAPTURE);
+        
+        for ($i = 0; $i < count($parts); $i++) {
+            $part = $parts[$i];
+       
+            if (!in_array($part, ["/", "?", "&"])) {
+      
+                if (preg_match("/[^a-zA-Z0-9_:]/", $part)) {
+                    throw new \Exception("An URL parameter can only contain letters, numbers, and _", 1);
+                }
+    
+                $prev = $parts[$i - 1] ?? null;
+    
+                if (($i === 0 || $prev === "/") && !empty(trim($part))) {
+                    if ($queryAlreadySet) {
+                        throw new \Exception("A path parameter can't be set after a query parameter", 1);
+                    }
+                    
+                    if (!str_starts_with($part, ":")) {
+                        var_dump($part);
+                        throw new \Exception("Missing ':' before path parameter '{$parts[$i]}'", 1);
+                    }
+                    $params[] = $part;
+    
+                } elseif ($prev === "?" || $prev === "&") {
+                    $queryAlreadySet = true;
+                    $params[] = "&" . $part;
+                }
+            }
+        }
+    
+        return $params;
+    }
+    
 }

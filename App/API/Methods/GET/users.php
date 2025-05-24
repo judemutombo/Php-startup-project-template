@@ -1,4 +1,6 @@
 <?php
 use API\Configuration\Router\RouteParameterValidator;
-RouteParameterValidator::set(":id");
-echo "users";
+
+RouteParameterValidator::set("/:id/:content?start&finish");
+
+var_dump(Request->method);
